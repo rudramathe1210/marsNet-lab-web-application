@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarsNet Lab | AI-Powered Mars Internet Infrastructure Dashboard</title>
+  <meta name="description" content="MarsNet Lab: An AI-powered educational dashboard for future engineers to design, simulate, and analyze interplanetary communication networks on Mars under extreme conditions.">
+  <meta name="keywords" content="MarsNet Lab, Mars Internet, Space Communications, NASA SCaN, CCSDS, Delay-Tolerant Networking, Planetary Engineering">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23e04e28'/><path d='M25 50 Q50 20 75 50 Q50 80 25 50' fill='none' stroke='%23ff9a76' stroke-width='4'/><circle cx='50' cy='50' r='8' fill='%2300f0ff'/><circle cx='75' cy='35' r='5' fill='%23fff'/></svg>">
+  
+  <!-- Modern Sci-Fi and Technical Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="sci-fi-theme">
+  <!-- Subtle Canvas Background for Cosmic Starfield & Particle Grid -->
+  <canvas id="starfieldCanvas" class="starfield-bg"></canvas>
+  <div class="hud-scanline-overlay"></div>
+
+  <!-- Primary Header & Mission Telemetry Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-container">
+        <div class="logo-orb">
+          <div class="mars-sphere"></div>
+          <div class="orbit-ring"></div>
+          <div class="pulse-beacon"></div>
+        </div>
+        <div class="logo-text">
+          <div class="brand-title">MARSNET <span class="accent-text">LAB</span></div>
+          <div class="brand-subtitle">Planetary Network Engineering Dashboard • CCSDS & NASA SCaN Aligned</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Mars Telemetry Banner -->
+    <div class="header-telemetry" id="headerTelemetry">
+      <div class="telemetry-pill" title="Martian Sol (Day on Mars since mission epoch)">
+        <span class="telemetry-label">SOL</span>
+        <span class="telemetry-value font-mono" id="liveSolCounter">1042</span>
+      </div>
+      <div class="telemetry-pill" title="Coordinated Mars Time at Airy-0 prime meridian">
+        <span class="telemetry-label">MTC</span>
+        <span class="telemetry-value font-mono" id="liveMtcTime">14:28:05</span>
+      </div>
+      <div class="telemetry-pill" title="Current Earth-to-Mars One-Way Light Time">
+        <span class="telemetry-label">OWLT (DELAY)</span>
+        <span class="telemetry-value font-mono highlight-amber" id="liveOwltDelay">12m 44s</span>
+      </div>
+      <div class="telemetry-pill" title="Solar Distance & Conjunction Safety Status">
+        <span class="telemetry-label">CONJUNCTION</span>
+        <span class="telemetry-value font-mono badge-safe" id="liveConjunctionStatus">CLEAR (38° SEP)</span>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <button class="icon-btn" id="audioToggleBtn" title="Toggle Telemetry Audio SFX" aria-label="Toggle Sound">
+        <span class="btn-icon">🔊</span>
+        <span class="btn-text">AUDIO ON</span>
+      </button>
+      <button class="primary-btn glow-btn" id="openMissionModalBtn">
+        <span class="btn-icon">🚀</span>
+        <span>MISSION REPORT</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <nav class="app-navbar" aria-label="Main Navigation">
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="tab-builder">
+        <span class="tab-icon">🛰️</span>
+        <span class="tab-label">Network Builder</span>
+        <span class="tab-indicator"></span>
+      </button>
+      <button class="nav-tab" data-tab="tab-simulator">
+        <span class="tab-icon">⚡</span>
+        <span class="tab-label">Simulation & Storms</span>
+        <span class="tab-indicator"></span>
+      </button>
+      <button class="nav-tab" data-tab="tab-environment">
+        <span class="tab-icon">🪐</span>
+        <span class="tab-label">Mars Environment</span>
+        <span class="tab-indicator"></span>
+      </button>
+      <button class="nav-tab" data-tab="tab-mentor">
+        <span class="tab-icon">🤖</span>
+        <span class="tab-label">ARES AI Mentor</span>
+        <span class="tab-badge">AI Active</span>
+        <span class="tab-indicator"></span>
+      </button>
+      <button class="nav-tab" data-tab="tab-academy">
+        <span class="tab-icon">🎓</span>
+        <span class="tab-label">Learning Hub & Quiz</span>
+        <span class="tab-indicator"></span>
+      </button>
+    </div>
+
+    <div class="navbar-status">
+      <span class="status-dot"></span>
+      <span class="status-text font-mono" id="globalEngineStatus">SIMULATION RUNNING • 1.0x</span>
+    </div>
+  </nav>
+
+  <!-- Main Application Body -->
+  <main class="app-main">
+    
+    <!-- ========================================== -->
+    <!-- TAB 1: INTERACTIVE NETWORK BUILDER -->
+    <!-- ========================================== -->
+    <section class="tab-content active" id="tab-builder">
+      <div class="builder-layout">
+        
+        <!-- Left Sidebar: Node & Link Tool Palette -->
+        <aside class="builder-palette glass-panel">
+          <div class="palette-header">
+            <h3>INFRASTRUCTURE COMPONENTS</h3>
+            <p class="section-desc">Drag or click components to deploy onto the Martian grid.</p>
+          </div>
+
+          <div class="palette-group">
+            <div class="group-title">SURFACE SETTLEMENTS & BASES</div>
+            <div class="palette-items">
+              <div class="palette-item" draggable="true" data-type="colony" data-label="Olympus Base Habitat">
+                <div class="item-icon colony-icon">🏛️</div>
+                <div class="item-details">
+                  <div class="item-name">Primary Colony Habitat</div>
+                  <div class="item-meta">High-gain array • 10 Gbps hub</div>
+                </div>
+              </div>
+              <div class="palette-item" draggable="true" data-type="science" data-label="Jezero Science Camp">
+                <div class="item-icon science-icon">🔬</div>
+                <div class="item-details">
+                  <div class="item-name">Jezero Science Outpost</div>
+                  <div class="item-meta">Crater floor • 1.2 Gbps buffer</div>
+                </div>
+              </div>
+              <div class="palette-item" draggable="true" data-type="canyon" data-label="Valles Marineris Station">
+                <div class="item-icon canyon-icon">🏔️</div>
+                <div class="item-details">
+                  <div class="item-name">Canyon Outpost (7km Deep)</div>
+                  <div class="item-meta">Deep canyon shadow • Repeaters req.</div>
+                </div>
+              </div>
+              <div class="palette-item" draggable="true" data-type="rover" data-label="Autonomous Rover Unit">
+                <div class="item-icon rover-icon">🚜</div>
+                <div class="item-details">
+                  <div class="item-name">Exploration Rover</div>
+                  <div class="item-meta">Mobile UHF / Proximity-1 • 2 Mbps</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="palette-group">
+            <div class="group-title">ORBITAL & SPACE RELAYS</div>
+            <div class="palette-items">
+              <div class="palette-item" draggable="true" data-type="areosat" data-label="Areosat-1 (Areostationary)">
+                <div class="item-icon areo-icon">🛰️</div>
+                <div class="item-details">
+                  <div class="item-name">Areostationary Satellite</div>
+                  <div class="item-meta">17,032 km altitude • Continuous LOS</div>
+                </div>
+              </div>
+              <div class="palette-item" draggable="true" data-type="polar" data-label="Mars Relay Orbiter (LMO)">
+                <div class="item-icon polar-icon">🛰️</div>
+                <div class="item-details">
+                  <div class="item-name">Low Mars Orbiter (LMO)</div>
+                  <div class="item-meta">400 km • Intermittent contact passes</div>
+                </div>
+              </div>
+              <div class="palette-item" draggable="true" data-type="dsn" data-label="Earth Deep Space Network (DSN)">
+                <div class="item-icon dsn-icon">🌍</div>
+                <div class="item-details">
+                  <div class="item-name">Earth DSN Gateway</div>
+                  <div class="item-meta">Goldstone/Madrid/Canberra • 3-22m delay</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="palette-group">
+            <div class="group-title">LINK MEDIUM SELECTION</div>
+            <div class="link-types-selector">
+              <label class="link-radio">
+                <input type="radio" name="linkMedium" value="optical" checked>
+                <span class="link-radio-custom optical-indicator"></span>
+                <span class="link-radio-text">
+                  <strong>Laser Comms (1550nm DSOC)</strong>
+                  <small>Ultra-fast (1.2 Gbps) • Susceptible to dust storms</small>
+                </span>
+              </label>
+              <label class="link-radio">
+                <input type="radio" name="linkMedium" value="kaband">
+                <span class="link-radio-custom kaband-indicator"></span>
+                <span class="link-radio-text">
+                  <strong>Ka-Band RF (32 GHz Microwave)</strong>
+                  <small>High throughput (150 Mbps) • Dust storm penetration</small>
+                </span>
+              </label>
+              <label class="link-radio">
+                <input type="radio" name="linkMedium" value="uhf">
+                <span class="link-radio-custom uhf-indicator"></span>
+                <span class="link-radio-text">
+                  <strong>UHF Proximity-1 (401 MHz)</strong>
+                  <small>Low-power omnidirectional • Short-range rovers</small>
+                </span>
+              </label>
+              <label class="link-radio">
+                <input type="radio" name="linkMedium" value="fiber">
+                <span class="link-radio-custom fiber-indicator"></span>
+                <span class="link-radio-text">
+                  <strong>Surface Fiber Optic Cable</strong>
+                  <small>Immune to weather • Expensive 0-latency physical run</small>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="palette-group">
+            <div class="group-title">PROTOCOL STACK</div>
+            <div class="protocol-toggle-box">
+              <div class="protocol-desc">Choose communication handling when line-of-sight is interrupted:</div>
+              <div class="btn-segmented">
+                <button class="seg-btn active" id="protocolDtnBtn" data-protocol="dtn">
+                  <strong>DTN / Bundle</strong>
+                  <small>CCSDS RFC 9171 (Store & Forward)</small>
+                </button>
+                <button class="seg-btn" id="protocolTcpBtn" data-protocol="tcp">
+                  <strong>Standard TCP/IP</strong>
+                  <small>Drops packets on outage</small>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Presets -->
+          <div class="palette-group">
+            <div class="group-title">MISSION ARCHITECTURE PRESETS</div>
+            <div class="preset-buttons">
+              <button class="action-btn-sm" id="presetMinimalBtn">Minimal Basecamp</button>
+              <button class="action-btn-sm" id="presetAreoBtn">3-Areosat Global Ring</button>
+              <button class="action-btn-sm" id="presetHybridBtn">Resilient Optical + RF Mesh</button>
+            </div>
+          </div>
+
+          <div class="palette-footer">
+            <button class="danger-btn-sm" id="clearCanvasBtn">Clear Grid</button>
+            <button class="action-btn-sm" id="exportNetworkBtn">Export JSON</button>
+          </div>
+        </aside>
+
+        <!-- Center: Interactive Network Canvas Stage -->
+        <div class="builder-center">
+          
+          <!-- Canvas Top Toolbar -->
+          <div class="canvas-toolbar glass-panel">
+            <div class="toolbar-left">
+              <span class="toolbar-title font-orbitron">MARS TOPOLOGY CANVAS</span>
+              <span class="mode-tag" id="currentToolMode">Mode: Drag & Select</span>
+            </div>
+            <div class="toolbar-center">
+              <div class="canvas-hints font-mono">
+                💡 Drag nodes to position • Click two nodes sequentially to create link • Click node to inspect
+              </div>
+            </div>
+            <div class="toolbar-right">
+              <button class="hud-toggle-btn" id="gridToggleBtn" title="Toggle Coordinate Grid">GRID ON</button>
+              <button class="hud-toggle-btn" id="losToggleBtn" title="Show Line of Sight Horizons">LOS ON</button>
+              <button class="audit-btn" id="auditNetworkBtn">
+                <span class="sparkle-icon">✨</span>
+                <span>AI AUDIT TOPOLOGY</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Main Interactive Canvas Container -->
+          <div class="canvas-viewport" id="canvasViewport">
+            <canvas id="networkCanvas"></canvas>
+
+            <!-- Floating Canvas HUD Overlay Indicators -->
+            <div class="canvas-hud-stats" id="canvasHudStats">
+              <div class="hud-stat-item">
+                <span class="hud-stat-lbl">NODES</span>
+                <span class="hud-stat-val font-mono" id="hudNodeCount">0</span>
+              </div>
+              <div class="hud-stat-item">
+                <span class="hud-stat-lbl">ACTIVE LINKS</span>
+                <span class="hud-stat-val font-mono" id="hudLinkCount">0</span>
+              </div>
+              <div class="hud-stat-item">
+                <span class="hud-stat-lbl">BACKBONE CAPACITY</span>
+                <span class="hud-stat-val font-mono" id="hudBackboneCapacity">0.0 Gbps</span>
+              </div>
+              <div class="hud-stat-item">
+                <span class="hud-stat-lbl">NETWORK HEALTH</span>
+                <span class="hud-stat-val font-mono badge-safe" id="hudNetworkHealth">OPTIMAL</span>
+              </div>
+            </div>
+
+            <!-- Orbit Altitude Legend overlay -->
+            <div class="orbit-legend">
+              <div class="legend-line areo-legend">
+                <span>Areostationary Clarke Orbit (17,032 km)</span>
+              </div>
+              <div class="legend-line polar-legend">
+                <span>Low Mars Orbit Relay Shell (350–500 km)</span>
+              </div>
+              <div class="legend-line surface-legend">
+                <span>Mars Mean Surface (Radius 3,389.5 km)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canvas Bottom Live Telemetry Trace -->
+          <div class="canvas-bottom-strip glass-panel">
+            <div class="strip-item">
+              <span class="strip-label">MARS CURVATURE HORIZON:</span>
+              <span class="strip-val font-mono">d ≈ 3.57 · √h km (Line of sight blocked past 68 km at 50m mast)</span>
+            </div>
+            <div class="strip-item">
+              <span class="strip-label">STORE-AND-FORWARD BUFFER:</span>
+              <span class="strip-val font-mono" id="liveBufferUtilization">0 MB / 500 GB (0%)</span>
+            </div>
+            <div class="strip-item">
+              <span class="strip-label">CCSDS CUSTODY TRANSFERS:</span>
+              <span class="strip-val font-mono highlight-cyan" id="liveCustodyStatus">ACK ACTIVE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sidebar: Node & Link Telemetry Inspector -->
+        <aside class="builder-inspector glass-panel" id="builderInspector">
+          <div class="inspector-header">
+            <h3 id="inspectorTitle">TELEMETRY INSPECTOR</h3>
+            <span class="inspector-badge" id="inspectorBadge">NO SELECTION</span>
+          </div>
+
+          <div class="inspector-body" id="inspectorBody">
+            <div class="inspector-empty-state">
+              <div class="empty-icon">🛰️</div>
+              <h4>Select a Node or Link</h4>
+              <p>Click on any communication terminal, rover, orbiter, or connection line on the canvas to inspect its live physical layer telemetry, link budget, and bundle queue.</p>
+            </div>
+          </div>
+
+          <!-- Quick Actions in Inspector -->
+          <div class="inspector-footer" id="inspectorFooter" style="display:none;">
+            <button class="action-btn-sm" id="pingNodeBtn">📡 Ping Link (RTT)</button>
+            <button class="danger-btn-sm" id="deleteSelectionBtn">🗑️ Delete</button>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+
+        <!-- ========================================== -->
+    <!-- TAB 2: ADVANCED SIMULATION & ORBITAL PHYSICS -->
+    <!-- ========================================== -->
+    <section class="tab-content" id="tab-simulator">
+      <div class="simulator-layout-advanced">
+        
+        <!-- Simulation Control Bar -->
+        <div class="sim-control-panel glass-panel">
+          <div class="sim-ctrl-left">
+            <h3 class="font-orbitron">KEPLERIAN ORBITAL DYNAMICS &amp; SIGNAL SIMULATION ENGINE</h3>
+            <p>Real-time line-of-sight raycasting, multi-satellite constellation tracking, atmospheric attenuation &amp; DTN custody transfer.</p>
+          </div>
+
+          <div class="sim-ctrl-center">
+            <div class="sim-playback-controls">
+              <button class="ctrl-btn" id="simPlayPauseBtn" title="Play or Pause Simulation">
+                <span id="simPlayIcon">⏸️</span>
+                <span id="simPlayText">PAUSE</span>
+              </button>
+              <button class="ctrl-btn" id="simStepBtn" title="Advance by 1 Sol Step">⏭️ +1 HOUR STEP</button>
+              <div class="speed-selector">
+                <span class="speed-label">TIME WARP:</span>
+                <button class="speed-btn active" data-speed="1">1x</button>
+                <button class="speed-btn" data-speed="5">5x</button>
+                <button class="speed-btn" data-speed="25">25x</button>
+                <button class="speed-btn" data-speed="100">100x</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sim-ctrl-right">
+            <button class="primary-btn glow-btn" id="dispatchTestBundleBtn">
+              <span>🚀 DISPATCH TEST BUNDLE</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Simulation Perspective Camera Selector Bar -->
+        <div class="sim-perspective-bar glass-panel">
+          <div class="perspective-left">
+            <span class="perspective-lbl font-mono">SIMULATION PERSPECTIVE:</span>
+            <div class="perspective-buttons">
+              <button class="cam-btn active" data-view="equatorial">
+                <span>🪐 Equatorial Orbital Plane (Top-Down)</span>
+              </button>
+              <button class="cam-btn" data-view="polar">
+                <span>🛰️ Polar Relay Inclination &amp; Swath</span>
+              </button>
+              <button class="cam-btn" data-view="horizon">
+                <span>🔭 Olympus Base Horizon Tracking</span>
+              </button>
+            </div>
+          </div>
+          <div class="perspective-right font-mono">
+            <span class="camera-status-tag" id="cameraStatusTag">FOV: 120° • AREOSTATIONARY CLARKE RING ACTIVE</span>
+          </div>
+        </div>
+
+        <!-- Simulation Grid: Visualized Stage + Scenario Injections -->
+        <div class="sim-main-grid-advanced">
+          
+          <!-- Visual Live Interactive Simulation Canvas -->
+          <div class="sim-viewport-card glass-panel">
+            <div class="card-header">
+              <div class="card-title font-orbitron">MARS CONSTELLATION FLIGHT DYNAMICS &amp; OCCULTATION STAGE</div>
+              <div class="card-tags">
+                <span class="tag-live">RAYCAST LOS ACTIVE</span>
+                <span class="tag-dtn" id="simCurrentProtocolTag">DTN BUNDLE PROTOCOL (RFC 9171)</span>
+              </div>
+            </div>
+            
+            <div class="sim-canvas-wrap-advanced">
+              <canvas id="simCanvas"></canvas>
+              
+              <!-- Storm overlay animation container -->
+              <div class="storm-visual-overlay" id="stormVisualOverlay"></div>
+
+              <!-- Sim HUD Overlays -->
+              <div class="sim-overlay-telemetry">
+                <div class="sim-hud-box">
+                  <span class="hud-title">ACTIVE CONSTELLATION ASSETS</span>
+                  <span class="hud-val font-mono" id="simActiveAssetsCount">3 Areosats • 2 LMO Relays • 2 Rovers</span>
+                </div>
+                <div class="sim-hud-box">
+                  <span class="hud-title">ATMOSPHERIC OPTICAL DEPTH (&tau;)</span>
+                  <span class="hud-val font-mono highlight-amber" id="simTauValue">0.45 (Clear Sol)</span>
+                </div>
+                <div class="sim-hud-box">
+                  <span class="hud-title">RAYCAST LINE-OF-SIGHT STATUS</span>
+                  <span class="hud-val font-mono highlight-green" id="simRaycastStatus">LOCK: 4 ACTIVE CONTACT BEAMS</span>
+                </div>
+              </div>
+
+              <!-- Camera View Overlay Badge -->
+              <div class="sim-view-badge font-mono" id="simViewBadge">VIEW: EQUATORIAL CLARKE RING (17,032 km)</div>
+            </div>
+
+            <!-- Real-time Live Telemetry Strip Charts (Canvas Rendered) -->
+            <div class="sim-charts-drawer">
+              <div class="drawer-header">
+                <span class="drawer-title font-mono">REAL-TIME TELEMETRY STRIP CHARTS</span>
+                <div class="chart-legend-wrap font-mono">
+                  <span class="legend-chip chip-throughput">■ THROUGHPUT (Mbps)</span>
+                  <span class="legend-chip chip-ber">■ BIT ERROR RATE (BER)</span>
+                  <span class="legend-chip chip-buffer">■ DTN CUSTODY BUFFER (MB)</span>
+                </div>
+              </div>
+              <div class="charts-canvas-container">
+                <canvas id="telemetryChartCanvas"></canvas>
+              </div>
+            </div>
+
+            <!-- Active Data Bundles in Transit Manifest -->
+            <div class="sim-bundle-manifest-drawer">
+              <div class="drawer-header">
+                <span class="drawer-title font-mono">ACTIVE INTERPLANETARY BUNDLE MANIFEST (RFC 9171 CUSTODY QUEUE)</span>
+                <span class="packet-stats font-mono">
+                  Sent: <strong id="statsPacketsSent">0</strong> | 
+                  Delivered: <strong id="statsPacketsDelivered" class="highlight-green">0</strong> | 
+                  In Custody: <strong id="statsPacketsBuffered" class="highlight-amber">0</strong> | 
+                  Dropped: <strong id="statsPacketsDropped" class="highlight-red">0</strong>
+                </span>
+              </div>
+              <div class="manifest-table-wrap">
+                <table class="manifest-table font-mono" id="bundleManifestTable">
+                  <thead>
+                    <tr>
+                      <th>BUNDLE ID</th>
+                      <th>PAYLOAD TYPE</th>
+                      <th>ORIGIN</th>
+                      <th>CURRENT CUSTODIAN</th>
+                      <th>DESTINATION</th>
+                      <th>LINK MEDIUM</th>
+                      <th>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bundleManifestBody">
+                    <tr>
+                      <td class="highlight-cyan">BDL-9042-01</td>
+                      <td>Perseverance Core Spectral Map (45 MB)</td>
+                      <td>Jezero Rover</td>
+                      <td>MRO Polar Relay</td>
+                      <td>Earth DSN</td>
+                      <td>Ka-Band 32GHz</td>
+                      <td><span class="badge-safe">IN CUSTODY TRANSFER</span></td>
+                    </tr>
+                    <tr>
+                      <td class="highlight-cyan">BDL-9042-02</td>
+                      <td>Olympus Habitat Life-Support Telemetry (1.2 MB)</td>
+                      <td>Olympus Base</td>
+                      <td>Areosat-1</td>
+                      <td>Earth DSN</td>
+                      <td>1550nm Laser</td>
+                      <td><span class="badge-safe">TRANSMITTING</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Environmental Controls & Scenario Injections -->
+          <div class="sim-sidebar">
+            
+            <!-- Tactical Scenario Injection Deck -->
+            <div class="card glass-panel">
+              <div class="card-header">
+                <h4 class="font-orbitron">MISSION SCENARIO INJECTION</h4>
+              </div>
+              <div class="card-body">
+                <p class="section-desc">Inject realistic space mission emergencies to evaluate autonomous protocol resiliency:</p>
+                <div class="scenario-buttons-grid">
+                  <button class="scenario-btn danger-scenario" id="scenarioDustStormBtn">
+                    <span class="scenario-icon">🌪️</span>
+                    <div class="scenario-info">
+                      <strong>Global Dust Storm (&tau;=5.4)</strong>
+                      <small>99% laser optical blackout • Solar power collapses</small>
+                    </div>
+                  </button>
+                  <button class="scenario-btn warn-scenario" id="scenarioConjunctionBtn">
+                    <span class="scenario-icon">☀️</span>
+                    <div class="scenario-info">
+                      <strong>Solar Conjunction Blackout</strong>
+                      <small>2-week Earth link freeze • Local autonomous mesh</small>
+                    </div>
+                  </button>
+                  <button class="scenario-btn info-scenario" id="scenarioPhobosEclipseBtn">
+                    <span class="scenario-icon">🌑</span>
+                    <div class="scenario-info">
+                      <strong>Phobos Transit RF Shadow</strong>
+                      <small>180s orbital eclipse • Temporary laser occultation</small>
+                    </div>
+                  </button>
+                  <button class="scenario-btn success-scenario" id="scenarioOptimalClearBtn">
+                    <span class="scenario-icon">✨</span>
+                    <div class="scenario-info">
+                      <strong>Restore Clear Sol Nominal</strong>
+                      <small>Clear skies (&tau;=0.2) • All optical lasers online</small>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Weather & Environmental Controls Card -->
+            <div class="card glass-panel">
+              <div class="card-header">
+                <h4 class="font-orbitron">ATMOSPHERIC DUST CONTROLS</h4>
+              </div>
+              <div class="card-body">
+                <div class="control-slider-group">
+                  <div class="slider-header">
+                    <span>Dust Storm Intensity:</span>
+                    <span class="font-mono highlight-amber" id="stormIntensityLabel">Clear Sky (10%)</span>
+                  </div>
+                  <input type="range" id="stormIntensitySlider" min="0" max="100" value="10" class="hud-range">
+                  <div class="slider-ticks">
+                    <span>Clear (&tau;=0.2)</span>
+                    <span>Regional (&tau;=1.8)</span>
+                    <span>Global (&tau;=5.0+)</span>
+                  </div>
+                </div>
+
+                <div class="metric-progress-wrap">
+                  <div class="metric-row">
+                    <span>Solar Panel Power Loss:</span>
+                    <span class="font-mono" id="solarLossVal">-8%</span>
+                  </div>
+                  <div class="meter-bar"><div class="meter-fill fill-amber" id="solarLossBar" style="width: 8%;"></div></div>
+                </div>
+
+                <div class="metric-progress-wrap">
+                  <div class="metric-row">
+                    <span>Laser Comms (1550nm) Path Loss:</span>
+                    <span class="font-mono highlight-red" id="laserLossVal">2.1 dB</span>
+                  </div>
+                  <div class="meter-bar"><div class="meter-fill fill-red" id="laserLossBar" style="width: 12%;"></div></div>
+                </div>
+
+                <div class="metric-progress-wrap">
+                  <div class="metric-row">
+                    <span>Ka-Band Microwave (32GHz) Margin:</span>
+                    <span class="font-mono highlight-green" id="kaLossVal">19.4 dB (Healthy)</span>
+                  </div>
+                  <div class="meter-bar"><div class="meter-fill fill-green" id="kaLossBar" style="width: 85%;"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Interplanetary Distance & Latency Slider -->
+            <div class="card glass-panel">
+              <div class="card-header">
+                <h4 class="font-orbitron">EARTH-MARS ORBITAL GEOMETRY</h4>
+              </div>
+              <div class="card-body">
+                <div class="control-slider-group">
+                  <div class="slider-header">
+                    <span>Earth-Mars Separation Distance:</span>
+                    <span class="font-mono highlight-cyan" id="earthMarsDistLabel">150 Million km</span>
+                  </div>
+                  <input type="range" id="earthMarsDistSlider" min="54.6" max="401" value="150" step="1" class="hud-range">
+                  <div class="slider-ticks">
+                    <span>Closest (54.6M km)</span>
+                    <span>Mean (225M km)</span>
+                    <span>Furthest (401M km)</span>
+                  </div>
+                </div>
+
+                <div class="stat-duo-grid">
+                  <div class="mini-stat-card">
+                    <span class="mini-stat-label">ONE-WAY LIGHT TIME</span>
+                    <span class="mini-stat-value font-mono highlight-amber" id="simOwltValue">8m 20s</span>
+                  </div>
+                  <div class="mini-stat-card">
+                    <span class="mini-stat-label">ROUND TRIP (RTT)</span>
+                    <span class="mini-stat-value font-mono highlight-amber" id="simRttValue">16m 40s</span>
+                  </div>
+                </div>
+
+                <!-- Solar Conjunction Simulation Switch -->
+                <div class="conjunction-switch-card">
+                  <div class="switch-left">
+                    <strong>Solar Conjunction Simulator</strong>
+                    <small>Simulates Sun occultation (2 weeks radio blackout between Earth and Mars)</small>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="conjunctionToggle">
+                    <span class="switch-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- TCP vs DTN Comparison Benchmark -->
+            <div class="card glass-panel">
+              <div class="card-header">
+                <h4 class="font-orbitron">TCP/IP VS DTN PERFORMANCE</h4>
+              </div>
+              <div class="card-body">
+                <div class="protocol-benchmark-box">
+                  <div class="proto-bench-row">
+                    <div class="proto-name">
+                      <strong>TCP/IP</strong>
+                      <small>Requires synchronous 3-way handshake</small>
+                    </div>
+                    <div class="proto-metrics font-mono">
+                      <span class="badge-danger" id="benchTcpStatus">TIMED OUT</span>
+                      <span id="benchTcpRate">0.0 Mbps</span>
+                    </div>
+                  </div>
+                  <div class="proto-bench-row highlight-row">
+                    <div class="proto-name">
+                      <strong>DTN (Bundle Protocol RFC 9171)</strong>
+                      <small>Asynchronous Custody Transfer</small>
+                    </div>
+                    <div class="proto-metrics font-mono">
+                      <span class="badge-safe" id="benchDtnStatus">CUSTODY OK</span>
+                      <span id="benchDtnRate" class="highlight-cyan">98.4% Delivery</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 3: MARS MISSION OPERATIONS DASHBOARD -->
+    <!-- ========================================== -->
+    <section class="tab-content" id="tab-environment">
+      <div class="moc-dashboard-layout">
+        
+        <!-- MOC Top Status Header Banner -->
+        <div class="moc-status-strip glass-panel">
+          <div class="moc-strip-item">
+            <span class="moc-strip-label">OPERATIONS CENTER:</span>
+            <span class="moc-strip-val font-orbitron highlight-cyan">MARS MOC • JEZERO CONSTELLATION GATEWAY</span>
+          </div>
+          <div class="moc-strip-item">
+            <span class="moc-strip-label">SEASONAL POSITION:</span>
+            <span class="moc-strip-val font-mono highlight-amber" id="liveMarsSeasonLs">L_s = 185° (Southern Spring / Storm Season)</span>
+          </div>
+          <div class="moc-strip-item">
+            <span class="moc-strip-label">LOCAL SOLAR TIME (OLYMPUS):</span>
+            <span class="moc-strip-val font-mono" id="liveLocalTrueSolarTime">13:42 LTST (Midday Sun)</span>
+          </div>
+          <div class="moc-strip-item">
+            <span class="moc-strip-label">FLEET HEALTH:</span>
+            <span class="moc-strip-val font-mono badge-safe">7/7 ASSETS NOMINAL</span>
+          </div>
+        </div>
+
+        <!-- MOC Main Grid: 2.5D Mars Globe & Telemetry + Spectrum + Link Budget -->
+        <div class="moc-main-grid">
+          
+          <!-- Left Column: Interactive 2.5D Mars Globe & Landing Sites Weather -->
+          <div class="moc-globe-card glass-panel">
+            <div class="card-header">
+              <div class="card-title font-orbitron">INTERACTIVE MARS SURFACE OPERATIONS GLOBE</div>
+              <div class="card-tags">
+                <span class="tag-live">DRAG TO ROTATE PLANET</span>
+                <span class="tag-dtn" id="currentSelectedSiteTag">SITE: JEZERO SCIENCE CRATER</span>
+              </div>
+            </div>
+
+            <div class="moc-globe-viewport">
+              <canvas id="marsGlobeCanvas"></canvas>
+              
+              <!-- Hotspot selection chips -->
+              <div class="site-hotspots-bar">
+                <button class="site-chip active" data-site="jezero">🔬 Jezero Crater (Perseverance)</button>
+                <button class="site-chip" data-site="olympus">🏛️ Olympus Base Hub</button>
+                <button class="site-chip" data-site="valles">🏔️ Valles Marineris (7km Canyon)</button>
+                <button class="site-chip" data-site="gale">🧪 Gale Crater (Curiosity)</button>
+                <button class="site-chip" data-site="arcadia">⛏️ Arcadia Ice Mining Base</button>
+              </div>
+            </div>
+
+            <!-- Live Site Weather Telemetry Cards -->
+            <div class="site-weather-telemetry-panel">
+              <div class="weather-telemetry-header">
+                <h4 class="font-orbitron" id="weatherSiteTitle">JEZERO CRATER METEOROLOGICAL TELEMETRY</h4>
+                <span class="font-mono highlight-cyan" id="weatherSiteCoords">18.38° N, 77.58° E • Elevation: -2.5 km</span>
+              </div>
+              <div class="weather-metrics-grid font-mono">
+                <div class="weather-box">
+                  <span class="w-lbl">AIR TEMPERATURE</span>
+                  <span class="w-val highlight-amber" id="wAirTemp">-21°C / -84°C</span>
+                </div>
+                <div class="weather-box">
+                  <span class="w-lbl">GROUND TEMPERATURE</span>
+                  <span class="w-val" id="wGroundTemp">-12°C</span>
+                </div>
+                <div class="weather-box">
+                  <span class="w-lbl">ATMOSPHERIC PRESSURE</span>
+                  <span class="w-val highlight-cyan" id="wPressure">618 Pa (6.18 mbar)</span>
+                </div>
+                <div class="weather-box">
+                  <span class="w-lbl">DUST OPACITY (&tau;)</span>
+                  <span class="w-val highlight-amber" id="wTau">0.45 (Moderate Haze)</span>
+                </div>
+                <div class="weather-box">
+                  <span class="w-lbl">SOLAR IRRADIANCE</span>
+                  <span class="w-val highlight-green" id="wSolarFlux">520 W/m² (88% Nominal)</span>
+                </div>
+                <div class="weather-box">
+                  <span class="w-lbl">WIND SPEED &amp; VECTOR</span>
+                  <span class="w-val" id="wWind">8.4 m/s (ESE 112°)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Link Budget Calculator & Spectrum Waterfall -->
+          <div class="moc-engineering-sidebar">
+            
+            <!-- Real-time Deep Space Link Budget Calculator -->
+            <div class="card glass-panel">
+              <div class="card-header">
+                <h4 class="font-orbitron">DEEP SPACE LINK BUDGET CALCULATOR</h4>
+                <span class="tag-live font-mono">CCSDS SCaN FORMULA</span>
+              </div>
+              <div class="card-body">
+                <div class="link-budget-inputs">
+                  <div class="budget-input-row">
+                    <label>Transmission Carrier:</label>
+                    <select id="budgetCarrierSelect" class="hud-select font-mono">
+                      <option value="laser" selected>1550nm Laser DSOC (193.4 THz)</option>
+                      <option value="kaband">32 GHz Ka-Band Microwave</option>
+                      <option value="xband">8.4 GHz X-Band Deep Space</option>
+                      <option value="uhf">401 MHz UHF Proximity-1</option>
+                    </select>
+                  </div>
+
+                  <div class="control-slider-group">
+                    <div class="slider-header">
+                      <span>Transmitter Power (Watts):</span>
+                      <span class="font-mono highlight-cyan" id="budgetTxPowerLabel">50 W (17.0 dBW)</span>
+                    </div>
+                    <input type="range" id="budgetTxPowerSlider" min="5" max="500" value="50" class="hud-range">
+                  </div>
+
+                  <div class="control-slider-group">
+                    <div class="slider-header">
+                      <span>Ground Antenna Diameter:</span>
+                      <span class="font-mono highlight-amber" id="budgetDishDiameterLabel">3.0 meters (Surface High-Gain)</span>
+                    </div>
+                    <input type="range" id="budgetDishDiameterSlider" min="0.5" max="34" value="3" step="0.5" class="hud-range">
+                  </div>
+                </div>
+
+                <!-- Live Calculated Link Margin Output -->
+                <div class="budget-summary-box font-mono">
+                  <div class="budget-row">
+                    <span>Free Space Path Loss (FSPL):</span>
+                    <strong id="budgetFsplVal">-248.5 dB</strong>
+                  </div>
+                  <div class="budget-row">
+                    <span>Atmospheric Dust Loss (A_dust):</span>
+                    <strong id="budgetDustLossVal" class="highlight-red">-2.0 dB</strong>
+                  </div>
+                  <div class="budget-row">
+                    <span>Antenna Gains (Tx + Rx):</span>
+                    <strong id="budgetGainVal" class="highlight-cyan">+88.2 dBi</strong>
+                  </div>
+                  <div class="budget-row highlight-border-top">
+                    <span>LINK MARGIN (Eb/N0 - Req):</span>
+                    <strong id="budgetMarginVal" class="highlight-green">+8.4 dB (HEALTHY LOCK)</strong>
+                  </div>
+                  <div class="budget-meter-wrap">
+                    <div class="budget-meter-fill fill-green" id="budgetMarginBar" style="width: 75%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RF Spectrum Waterfall & Carrier FFT Display -->
+            <div class="card glass-panel">
+              <div class="card-header">
+                <h4 class="font-orbitron">RF SPECTRUM WATERFALL ANALYZER</h4>
+                <span class="tag-live font-mono">LIVE CARRIER LOCK</span>
+              </div>
+              <div class="card-body">
+                <div class="spectrum-canvas-wrap">
+                  <canvas id="spectrumCanvas"></canvas>
+                </div>
+                <div class="spectrum-channels-legend font-mono">
+                  <span class="spec-chan ch-uhf">UHF 401M (ROVER)</span>
+                  <span class="spec-chan ch-xband">X-BAND 8.4G (NAV)</span>
+                  <span class="spec-chan ch-ka">Ka-BAND 32G (RF TRUNK)</span>
+                  <span class="spec-chan ch-laser">1550nm (LASER)</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Constellation Fleet Telemetry Matrix -->
+        <div class="moc-fleet-matrix glass-panel">
+          <div class="fleet-matrix-header">
+            <h4 class="font-orbitron">MARS CONSTELLATION ASSET HEALTH &amp; TELEMETRY MATRIX</h4>
+            <span class="font-mono highlight-cyan">REFRESH RATE: REAL-TIME (SOLAR ARRAYS • CUSTODY MEMORY • BATTERY)</span>
+          </div>
+          <div class="fleet-cards-grid font-mono">
+            
+            <div class="fleet-card">
+              <div class="fleet-card-top">
+                <span class="fleet-name highlight-cyan">AREOSAT ALPHA</span>
+                <span class="fleet-badge badge-safe">STATIONARY</span>
+              </div>
+              <div class="fleet-meta">17,032 km • 0° Longitude • Primary Laser Backbone</div>
+              <div class="fleet-stats">
+                <div>Battery: <strong class="highlight-green">98%</strong></div>
+                <div>Solar Array: <strong class="highlight-green">4.2 kW</strong></div>
+                <div>Custody Buffer: <strong class="highlight-cyan">18.4 GB (4%)</strong></div>
+                <div>Next Handover: <strong>CONTINUOUS (24/7)</strong></div>
+              </div>
+            </div>
+
+            <div class="fleet-card">
+              <div class="fleet-card-top">
+                <span class="fleet-name highlight-cyan">AREOSAT BETA</span>
+                <span class="fleet-badge badge-safe">STATIONARY</span>
+              </div>
+              <div class="fleet-meta">17,032 km • 120° W • Ka-Band &amp; Optical Cross-Link</div>
+              <div class="fleet-stats">
+                <div>Battery: <strong class="highlight-green">96%</strong></div>
+                <div>Solar Array: <strong class="highlight-green">4.1 kW</strong></div>
+                <div>Custody Buffer: <strong class="highlight-cyan">12.1 GB (2%)</strong></div>
+                <div>Next Handover: <strong>CONTINUOUS (24/7)</strong></div>
+              </div>
+            </div>
+
+            <div class="fleet-card">
+              <div class="fleet-card-top">
+                <span class="fleet-name highlight-cyan">AREOSAT GAMMA</span>
+                <span class="fleet-badge badge-safe">STATIONARY</span>
+              </div>
+              <div class="fleet-meta">17,032 km • 240° W • Deep Space DSN Relay</div>
+              <div class="fleet-stats">
+                <div>Battery: <strong class="highlight-green">94%</strong></div>
+                <div>Solar Array: <strong class="highlight-green">4.3 kW</strong></div>
+                <div>Custody Buffer: <strong class="highlight-cyan">34.8 GB (7%)</strong></div>
+                <div>Next Handover: <strong>CONTINUOUS (24/7)</strong></div>
+              </div>
+            </div>
+
+            <div class="fleet-card">
+              <div class="fleet-card-top">
+                <span class="fleet-name highlight-amber">MRO POLAR RELAY</span>
+                <span class="fleet-badge badge-safe">ORBITING (400 km)</span>
+              </div>
+              <div class="fleet-meta">Inclination: 92.8° • Period: 118m • Rover Proximity Relay</div>
+              <div class="fleet-stats">
+                <div>Battery: <strong class="highlight-amber">84% (Eclipse)</strong></div>
+                <div>Solar Array: <strong class="highlight-green">1.8 kW</strong></div>
+                <div>Custody Buffer: <strong class="highlight-amber">112.5 GB (23%)</strong></div>
+                <div>Next Contact: <strong class="highlight-green">08m 42s (Jezero)</strong></div>
+              </div>
+            </div>
+
+            <div class="fleet-card">
+              <div class="fleet-card-top">
+                <span class="fleet-name highlight-green">PERSEVERANCE SCOUT</span>
+                <span class="fleet-badge badge-safe">SURFACE MOBILE</span>
+              </div>
+              <div class="fleet-meta">Jezero Crater Floor • MMRTG Nuclear Powered • UHF 401M</div>
+              <div class="fleet-stats">
+                <div>MMRTG Power: <strong class="highlight-green">110 W</strong></div>
+                <div>UHF Mast: <strong class="highlight-green">LOCKED</strong></div>
+                <div>Buffer Queued: <strong class="highlight-amber">45.2 MB</strong></div>
+                <div>Zenith Pass in: <strong class="highlight-cyan">08m 42s</strong></div>
+              </div>
+            </div>
+
+            <div class="fleet-card">
+              <div class="fleet-card-top">
+                <span class="fleet-name highlight-cyan">OLYMPUS BASE HUB</span>
+                <span class="fleet-badge badge-safe">SURFACE TERMINAL</span>
+              </div>
+              <div class="fleet-meta">Primary Habitation Hub • Dual 5m High-Gain Optical Disks</div>
+              <div class="fleet-stats">
+                <div>Fission Reactor: <strong class="highlight-green">40 kW</strong></div>
+                <div>Throughput: <strong class="highlight-green">10 Gbps</strong></div>
+                <div>Local Buffer: <strong class="highlight-cyan">2.4 TB / 10 TB</strong></div>
+                <div>Uptime: <strong class="highlight-green">1042 SOLS (100%)</strong></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 4: ARES AI NETWORK MENTOR -->
+    <!-- ========================================== -->
+    <section class="tab-content" id="tab-mentor">
+      <div class="mentor-layout">
+        
+        <!-- Mentor Left: Agent Profile & Pre-Loaded Mission Prompts -->
+        <aside class="mentor-sidebar glass-panel">
+          <div class="mentor-agent-card">
+            <div class="mentor-avatar-wrap">
+              <div class="mentor-avatar">🤖</div>
+              <div class="mentor-pulse"></div>
+            </div>
+            <div class="mentor-info">
+              <h3 class="font-orbitron">ARES AI</h3>
+              <div class="agent-tag">Planetary Network Architect</div>
+              <div class="agent-status font-mono">● ONLINE • CCSDS v4.2</div>
+            </div>
+          </div>
+
+          <div class="mentor-bio">
+            <p>
+              I am your AI Planetary Communications Advisor. I evaluate network topologies, calculate link margins under dust storm conditions, and verify delay-tolerant bundle protocol compliance.
+            </p>
+          </div>
+
+          <div class="sidebar-section-title">QUICK ARCHITECTURE AUDITS</div>
+          <div class="audit-action-cards">
+            <button class="mentor-prompt-btn" id="mentorAuditCanvasBtn">
+              <span class="prompt-icon">🔍</span>
+              <div class="prompt-text">
+                <strong>Audit Current Canvas Topology</strong>
+                <small>Run vulnerability, latency &amp; bottleneck check</small>
+              </div>
+            </button>
+            <button class="mentor-prompt-btn" id="mentorDustCheckBtn">
+              <span class="prompt-icon">🌪️</span>
+              <div class="prompt-text">
+                <strong>Simulate Storm Survival</strong>
+                <small>Can your network survive a &tau;=4.5 storm?</small>
+              </div>
+            </button>
+          </div>
+
+          <div class="sidebar-section-title">CORE PLANETARY QUESTIONS</div>
+          <div class="suggested-questions-list">
+            <button class="quick-question-btn" data-query="Why does standard terrestrial TCP/IP fail completely on Mars?">
+              💬 Why does TCP/IP fail across Mars-Earth distances?
+            </button>
+            <button class="quick-question-btn" data-query="Explain how Delay-Tolerant Networking (DTN) and the Bundle Protocol (RFC 9171) solve the latency problem.">
+              💬 How does DTN Bundle Protocol work?
+            </button>
+            <button class="quick-question-btn" data-query="What is an Areostationary Orbit, and what are its orbital parameters compared to Earth's Geostationary Orbit?">
+              💬 Areostationary vs Geostationary orbits
+            </button>
+            <button class="quick-question-btn" data-query="Should our primary Mars backbone use 1550nm Laser Optical Comms or 32 GHz Ka-Band Microwave RF?">
+              💬 Laser Optical Comms vs Ka-Band RF
+            </button>
+            <button class="quick-question-btn" data-query="How does Mars' 38% gravity affect communications satellite constellation planning?">
+              💬 How does 38% gravity affect satellite constellations?
+            </button>
+            <button class="quick-question-btn" data-query="How should Mars settlements maintain communications during Solar Conjunction?">
+              💬 Handling 2-week Solar Conjunction blackouts
+            </button>
+          </div>
+        </aside>
+
+        <!-- Mentor Right: Interactive Chat Interface -->
+        <div class="mentor-chat-stage glass-panel">
+          <div class="chat-header">
+            <div class="chat-header-title">
+              <span class="font-orbitron">ARES PLANETARY ENGINEERING CONSOLE</span>
+              <span class="chat-sub">Interactive Multimodal Advisor for Interplanetary Communications</span>
+            </div>
+            <div class="chat-header-actions">
+              <button class="action-btn-sm" id="clearChatBtn">Clear Log</button>
+            </div>
+          </div>
+
+          <!-- Chat Scrollable Message Stream -->
+          <div class="chat-message-stream" id="chatMessageStream">
+            <!-- Initial Greeting from AI -->
+            <div class="chat-msg ai-msg">
+              <div class="msg-avatar">🤖</div>
+              <div class="msg-bubble">
+                <div class="msg-sender font-mono">ARES-AI • SENIOR PLANETARY COMM SPECIALIST</div>
+                <div class="msg-text">
+                  <p>Greetings, Engineer. Welcome to the <strong>MarsNet Lab Architecture Console</strong>.</p>
+                  <p>Building the Internet on Mars is not as simple as replicating Earth's fiber cables and cell towers. Mars has <strong>no undersea cables</strong>, a <strong>38% gravity field</strong>, orbital light delays between <strong>3 to 22 minutes</strong>, and planet-enveloping dust storms that can blackout laser signals.</p>
+                  <p>Ask me any question regarding Martian network architecture, or click <strong>"Audit Current Canvas Topology"</strong> to have me evaluate your deployed infrastructure on the canvas!</p>
+                </div>
+                <div class="msg-time font-mono">SYS_INIT_SOL_1042</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Input Controls -->
+          <form class="chat-input-bar" id="chatInputForm">
+            <div class="input-wrap">
+              <input type="text" id="chatUserQuery" placeholder="Ask ARES about DTN, areostationary orbits, dust storm attenuation, link budgets..." autocomplete="off">
+            </div>
+            <button type="submit" class="primary-btn glow-btn" id="sendQueryBtn">
+              <span>TRANSMIT</span>
+              <span class="btn-icon">⚡</span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 5: LEARNING HUB & QUIZ ACADEMY -->
+    <!-- ========================================== -->
+    <section class="tab-content" id="tab-academy">
+      <div class="academy-layout">
+        
+        <!-- Academy Sub-Navigation -->
+        <div class="academy-nav-strip glass-panel">
+          <div class="academy-tabs">
+            <button class="academy-subtab active" data-subtab="lessons-view">
+              <span>📚 Visual Curriculum Modules (5 Modules)</span>
+            </button>
+            <button class="academy-subtab" data-subtab="quiz-view">
+              <span>📝 Planetary Certification Exam &amp; Quiz</span>
+            </button>
+            <button class="academy-subtab" data-subtab="glossary-view">
+              <span>📖 Interplanetary Glossary &amp; Standards</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sub-View 1: Curriculum Modules -->
+        <div class="academy-subview active" id="lessons-view">
+          <div class="curriculum-grid">
+            
+            <!-- Module 1 -->
+            <div class="lesson-card glass-panel" data-lesson-id="1">
+              <div class="lesson-badge">MODULE 01</div>
+              <h3 class="font-orbitron">Earth vs. Mars: The Planetary Gap</h3>
+              <p>Why terrestrial networking paradigms break down in deep space. Speed of light physics, orbital distance extremes, and zero legacy infrastructure.</p>
+              <div class="lesson-topics">
+                <span class="topic-tag">Speed of Light</span>
+                <span class="topic-tag">3m to 22m OWLT</span>
+                <span class="topic-tag">No GPS Backbone</span>
+              </div>
+              <button class="action-btn-sm open-lesson-btn" data-id="1">Read Module &amp; Diagram &rarr;</button>
+            </div>
+
+            <!-- Module 2 -->
+            <div class="lesson-card glass-panel" data-lesson-id="2">
+              <div class="lesson-badge">MODULE 02</div>
+              <h3 class="font-orbitron">Delay-Tolerant Networking &amp; DTN</h3>
+              <p>Deep dive into the CCSDS Bundle Protocol (RFC 9171). Learn why TCP's 3-way handshake times out and how store-and-forward custody transfer saves packets.</p>
+              <div class="lesson-topics">
+                <span class="topic-tag">RFC 9171</span>
+                <span class="topic-tag">Custody Transfer</span>
+                <span class="topic-tag">Contact Graph Routing</span>
+              </div>
+              <button class="action-btn-sm open-lesson-btn" data-id="2">Read Module &amp; Diagram &rarr;</button>
+            </div>
+
+            <!-- Module 3 -->
+            <div class="lesson-card glass-panel" data-lesson-id="3">
+              <div class="lesson-badge">MODULE 03</div>
+              <h3 class="font-orbitron">Orbital Mechanics in 38% Gravity</h3>
+              <p>Designing satellite constellations around Mars. Areostationary Clarke orbit at 17,032 km vs Low Mars Orbit (LMO) polar relays, elevation masks, and occultation.</p>
+              <div class="lesson-topics">
+                <span class="topic-tag">Areostationary (17,032 km)</span>
+                <span class="topic-tag">0.38g &Delta;V</span>
+                <span class="topic-tag">Occultation Windows</span>
+              </div>
+              <button class="action-btn-sm open-lesson-btn" data-id="3">Read Module &amp; Diagram &rarr;</button>
+            </div>
+
+            <!-- Module 4 -->
+            <div class="lesson-card glass-panel" data-lesson-id="4">
+              <div class="lesson-badge">MODULE 04</div>
+              <h3 class="font-orbitron">Atmospheric &amp; Topographic Attenuation</h3>
+              <p>Optical depth &tau;, dust scattering physics, and surface canyon shielding in Valles Marineris. How engineers build multi-tier redundant mesh backbones.</p>
+              <div class="lesson-topics">
+                <span class="topic-tag">Optical Depth &tau;</span>
+                <span class="topic-tag">Mie Scattering</span>
+                <span class="topic-tag">Canyon Repeaters</span>
+              </div>
+              <button class="action-btn-sm open-lesson-btn" data-id="4">Read Module &amp; Diagram &rarr;</button>
+            </div>
+
+            <!-- Module 5 -->
+            <div class="lesson-card glass-panel" data-lesson-id="5">
+              <div class="lesson-badge">MODULE 05</div>
+              <h3 class="font-orbitron">Deep Space Optical vs. Ka-Band RF</h3>
+              <p>Comparing 1550nm laser transmitters (DSOC) offering 1.2+ Gbps with high-power 32 GHz Ka-Band microwave dishes. Hybrid pointing architectures.</p>
+              <div class="lesson-topics">
+                <span class="topic-tag">DSOC 1550nm Laser</span>
+                <span class="topic-tag">Ka-Band 32 GHz</span>
+                <span class="topic-tag">Pointing Jitter</span>
+              </div>
+              <button class="action-btn-sm open-lesson-btn" data-id="5">Read Module &amp; Diagram &rarr;</button>
+            </div>
+
+            <!-- Module 6 -->
+            <div class="lesson-card glass-panel" data-lesson-id="6">
+              <div class="lesson-badge">MODULE 06</div>
+              <h3 class="font-orbitron">Interplanetary Standards &amp; DSN</h3>
+              <p>NASA Space Communications and Navigation (SCaN), CCSDS Blue Books, ISRO Mangalyaan heritage, and future commercial lunar/martian protocols.</p>
+              <div class="lesson-topics">
+                <span class="topic-tag">NASA SCaN</span>
+                <span class="topic-tag">ISRO MOM</span>
+                <span class="topic-tag">CCSDS Blue Books</span>
+              </div>
+              <button class="action-btn-sm open-lesson-btn" data-id="6">Read Module &amp; Diagram &rarr;</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Sub-View 2: Interactive Quiz & Certification -->
+        <div class="academy-subview" id="quiz-view">
+          <div class="quiz-wrapper glass-panel">
+            <div class="quiz-header">
+              <div class="quiz-header-info">
+                <h2 class="font-orbitron">PLANETARY NETWORK ENGINEER CERTIFICATION EXAM</h2>
+                <p>Test your knowledge on Mars orbital mechanics, Delay-Tolerant Networking (DTN), optical attenuation, and inter-settlement architecture.</p>
+              </div>
+              <div class="quiz-progress-stat font-mono">
+                QUESTION <span id="quizCurrentIdx">1</span> OF <span id="quizTotalCount">10</span>
+              </div>
+            </div>
+
+            <div class="quiz-bar-wrap">
+              <div class="quiz-progress-bar" id="quizProgressBar" style="width: 10%;"></div>
+            </div>
+
+            <!-- Active Question Card -->
+            <div class="quiz-question-card" id="quizQuestionCard">
+              <h3 class="question-text" id="quizQuestionText">Loading question...</h3>
+              <div class="quiz-options-list" id="quizOptionsList">
+                <!-- Dynamically generated options -->
+              </div>
+              
+              <!-- Instant Explanation Box -->
+              <div class="quiz-feedback-box" id="quizFeedbackBox" style="display:none;">
+                <div class="feedback-title font-mono" id="feedbackTitle">CORRECT!</div>
+                <div class="feedback-desc" id="feedbackDesc">Explanation text here...</div>
+              </div>
+            </div>
+
+            <!-- Quiz Controls -->
+            <div class="quiz-controls">
+              <button class="action-btn-sm" id="quizPrevBtn" disabled>&larr; Previous</button>
+              <div class="quiz-score-badge font-mono">Score: <span id="quizScoreVal">0</span> / 10</div>
+              <button class="primary-btn glow-btn" id="quizNextBtn">Next Question &rarr;</button>
+            </div>
+
+            <!-- Quiz Completion Modal / Banner -->
+            <div class="quiz-results-card" id="quizResultsCard" style="display:none;">
+              <div class="results-trophy">🎖️</div>
+              <h2 class="font-orbitron" id="resultsTitle">CERTIFICATION COMPLETED!</h2>
+              <p id="resultsSubtitle">You scored <strong id="resultsScore">8/10 (80%)</strong> on the Mars Planetary Network Examination.</p>
+              
+              <div class="student-name-input-group">
+                <label for="studentCertName">Enter your name for official certificate:</label>
+                <div class="input-row">
+                  <input type="text" id="studentCertName" placeholder="e.g. Dr. Alex Mercer" value="Cadet Engineer" class="hud-input">
+                  <button class="primary-btn glow-btn" id="generateCertBtn">🎓 VIEW &amp; DOWNLOAD CERTIFICATE</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Sub-View 3: Planetary Glossary -->
+        <div class="academy-subview" id="glossary-view">
+          <div class="glossary-grid">
+            <div class="glossary-item glass-panel">
+              <div class="term-title font-orbitron">DTN (Delay-Tolerant Networking)</div>
+              <div class="term-desc">An architecture designed for networks subject to severe delays, frequent disruptions, and lack of continuous end-to-end connectivity. Standardized under CCSDS and IETF RFC 4838 / RFC 9171.</div>
+            </div>
+            <div class="glossary-item glass-panel">
+              <div class="term-title font-orbitron">Areostationary Orbit</div>
+              <div class="term-desc">A circular synchronous orbit around Mars with an orbital period equal to one Martian Sol (24h 39m 35s), situated at an altitude of approximately 17,032 km above the Martian equator.</div>
+            </div>
+            <div class="glossary-item glass-panel">
+              <div class="term-title font-orbitron">OWLT (One-Way Light Time)</div>
+              <div class="term-desc">The time required for an electromagnetic signal to propagate from transmitter to receiver across the vacuum of space at the speed of light (c ≈ 299,792 km/s). Between Earth and Mars, OWLT varies between 3.03 and 22.28 minutes.</div>
+            </div>
+            <div class="glossary-item glass-panel">
+              <div class="term-title font-orbitron">Optical Depth (&tau;)</div>
+              <div class="term-desc">A measure of atmospheric opacity. On Mars, normal clear skies have &tau; ≈ 0.2–0.5. During severe global dust storms, &tau; exceeds 4.0 to 6.0, extinguishing over 99% of optical laser transmission.</div>
+            </div>
+            <div class="glossary-item glass-panel">
+              <div class="term-title font-orbitron">CCSDS (Consultative Committee for Space Data Systems)</div>
+              <div class="term-desc">International forum formed in 1982 by major space agencies (NASA, ESA, ISRO, JAXA) that establishes interoperable communication standards for deep space exploration.</div>
+            </div>
+            <div class="glossary-item glass-panel">
+              <div class="term-title font-orbitron">DSN (Deep Space Network)</div>
+              <div class="term-desc">NASA's international array of giant 34m and 70m parabolic antenna facilities located in Goldstone (California), Madrid (Spain), and Canberra (Australia), spaced ~120° apart to provide uninterrupted interplanetary tracking.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODALS -->
+  <!-- ========================================== -->
+
+  <!-- Modal 1: Official Planetary Engineer Certificate -->
+  <div class="modal-backdrop" id="certificateModal">
+    <div class="modal-box cert-modal-box glass-panel">
+      <div class="modal-header">
+        <h3 class="font-orbitron">OFFICIAL MARSNET LAB CERTIFICATE</h3>
+        <button class="modal-close-btn" id="closeCertModalBtn">&times;</button>
+      </div>
+      <div class="modal-body cert-modal-body">
+        <div class="cert-canvas-wrap">
+          <canvas id="certCanvas" width="900" height="600"></canvas>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn-sm" id="downloadCertPngBtn">💾 Download High-Res PNG</button>
+        <button class="primary-btn glow-btn" id="printCertBtn">🖨️ Print Certificate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Comprehensive Mission & Stakeholder Report -->
+  <div class="modal-backdrop" id="missionReportModal">
+    <div class="modal-box report-modal-box glass-panel">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-title font-orbitron">MARSNET LAB: MISSION CHARTER &amp; SPECIFICATIONS</div>
+          <div class="modal-subtitle">AI-Powered Dashboard for Designing Mars' Future Internet Infrastructure</div>
+        </div>
+        <button class="modal-close-btn" id="closeReportModalBtn">&times;</button>
+      </div>
+      <div class="modal-body report-content font-sans">
+        
+        <div class="report-section">
+          <h4>1. EXECUTIVE MISSION SUMMARY</h4>
+          <p>
+            The Internet we use today was engineered exclusively for Earth's environment: dense terrestrial fiber backbones, negligible sub-second round-trip latencies, GPS satellite synchronization, and benign atmosphere. As humanity establishes permanent scientific habitats and cities on Mars, these systems cannot simply be copy-pasted.
+          </p>
+          <p>
+            <strong>MarsNet Lab</strong> provides an AI-guided simulation, modeling, and educational testbed that prepares the next generation of planetary network engineers to conquer deep space delay, 0.38g orbital mechanics, and planet-scale dust storms.
+          </p>
+        </div>
+
+        <div class="report-grid">
+          <div class="report-card">
+            <h5>SUPPORTING PLANETARY DATA</h5>
+            <ul>
+              <li><strong>0.38g Gravity:</strong> Areostationary altitude compressed to 17,032 km vs Earth's 35,786 km. Lower &Delta;V required for orbital correction.</li>
+              <li><strong>Dust Storm Extremes:</strong> Planet-encircling storms elevate optical depth &tau; past 5.0, halting optical laser links and dropping solar generation by 80-90%.</li>
+              <li><strong>Zero Legacy Infrastructure:</strong> No undersea cables, fiber routes, or cell towers exist. Complete ground-up architecture required.</li>
+              <li><strong>Interplanetary Delay:</strong> 3.03 to 22.28 minutes one-way propagation creates 6 to 44 minute RTT, invalidating TCP handshakes.</li>
+            </ul>
+          </div>
+          
+          <div class="report-card">
+            <h5>POTENTIAL STAKEHOLDERS &amp; USERS</h5>
+            <ul>
+              <li><strong>NASA SCaN:</strong> Space Communications and Navigation architecture validation.</li>
+              <li><strong>ESA (European Space Agency):</strong> ExoMars and Moonlight communication compatibility.</li>
+              <li><strong>ISRO (Indian Space Research Organisation):</strong> Mars Orbiter Mission (Mangalyaan) relay frameworks.</li>
+              <li><strong>Space Education Institutes:</strong> Universities, aerospace engineering labs, and STEM students worldwide.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="report-section">
+          <h4>2. STANDARDS &amp; GOVERNING BODIES</h4>
+          <div class="standards-tags">
+            <span class="std-tag">CCSDS 734.2-B-1 (Bundle Protocol)</span>
+            <span class="std-tag">IETF RFC 9171 (DTN)</span>
+            <span class="std-tag">CCSDS 211.0-B-6 (Proximity-1 Space Link)</span>
+            <span class="std-tag">NASA SCaN Architecture 2030+</span>
+            <span class="std-tag">Mars Society Research</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn-sm" id="exportFullReportBtn">📋 Copy Executive Brief</button>
+        <button class="primary-btn glow-btn" id="dismissReportBtn">Close Charter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lesson Reader Modal -->
+  <div class="modal-backdrop" id="lessonReaderModal">
+    <div class="modal-box lesson-reader-box glass-panel">
+      <div class="modal-header">
+        <h3 class="font-orbitron" id="lessonReaderTitle">Module Title</h3>
+        <button class="modal-close-btn" id="closeLessonModalBtn">&times;</button>
+      </div>
+      <div class="modal-body lesson-reader-body" id="lessonReaderBody">
+        <!-- Injected via JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button class="primary-btn glow-btn" id="finishLessonBtn">Mark Module Complete &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JavaScript Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
